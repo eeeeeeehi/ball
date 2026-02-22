@@ -1,11 +1,15 @@
 using UnityEngine;
 public class GoalSpawner : MonoBehaviour
 {
-    public float range = 40f;  // è∞ÇÃîºï™Ç≠ÇÁÇ¢
-    void Start()
+    public Transform goal;
+    public float range = 40f;
+    public void MoveGoalToNewPosition()
     {
-        float randomX = Random.Range(-range, range);
-        float randomZ = Random.Range(-range, range);
-        transform.position = new Vector3(randomX, 0.1f, randomZ);
+        Vector3 newPos = new Vector3(
+            Random.Range(-range, range),
+            goal.position.y,
+            Random.Range(-range, range)
+        );
+        goal.position = newPos;
     }
 }
