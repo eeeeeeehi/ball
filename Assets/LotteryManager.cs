@@ -1,108 +1,375 @@
-using UnityEngine;
-
-[System.Serializable]
-
-public class LotterySummary
-
-{
-
-    public int tickets;
-
-    public long totalPrize;
-
-    public int c1; public long p1;
-
-    public int c2; public long p2;
-
-    public int c3; public long p3;
-
-    public int c4; public long p4;
-
-    public LotterySummary(int tickets)
-
-    {
-
-        this.tickets = tickets;
-
-    }
-
-}
+﻿using UnityEngine;
 
 public class LotteryManager : MonoBehaviour
 
 {
 
-    // ��F�W�����{�󂭂����ۂ����z�i��ōD���ɕς���OK�j
+    [Header("Grades")]
 
-    public long prize1 = 100000000; // 1�� 1��
+    [SerializeField] private int gradeCount = 7; // 1等〜7等（ハズレは別）
 
-    public long prize2 = 1000000;   // 2�� 100��
+    [Header("Prize Settings (per ticket)")]
 
-    public long prize3 = 10000;     // 3�� 1��
+    [Tooltip("1等〜n等の当選金（1枚あたり）")]
 
-    public long prize4 = 300;       // 4�� 300�~
+    [SerializeField] private int[] payoutPerGrade;
 
-    // �m���͓K���i�Q�[���p�j�B���A���ɂ������Ȃ��Œ�����OK
+    [Header("Probability Weights (bigger = more likely)")]
 
-    // ���v��1�𒴂��Ȃ��悤�ɂ��Ă�
+    [Tooltip("1等〜n等の抽選重み（大きいほど当たりやすい）。ハズレは別計算。")]
 
-    public float prob1 = 0.0000001f;
+    [SerializeField] private int[] weightPerGrade;
 
-    public float prob2 = 0.00001f;
+    [Header("Lose Settings")]
 
-    public float prob3 = 0.001f;
+    [Tooltip("ハズレの重み（大きいほどハズレが増える）")]
 
-    public float prob4 = 0.10f;
+    [SerializeField] private int loseWeight = 200;
 
-    public LotterySummary RunLottery(int ticketCount)
+    // ===== Totals (累計) =====
+
+    [Header("Totals (ReadOnly)")]
+
+    [SerializeField] private int totalTicketsBought;
+
+    [SerializeField] private int totalPayout;
+
+    [SerializeField] private int totalLoseTickets;
+
+    [SerializeField] private int[] totalWinTicketsPerGrade;
+
+    // ===== Last Run (今回) =====
+
+    [Header("Last Result (ReadOnly)")]
+
+    [SerializeField] private int payoutThisRun;
+
+    [SerializeField] private int loseThisRun;
+
+    [SerializeField] private int[] winThisRunPerGrade;
+
+    // 最後の結果（参照用）
+
+    public LotteryResult LastResult { get; private set; }
+
+    // ===== 外部参照用プロパティ（UIが使う）=====
+
+    public int GradeCount => gradeCount;
+
+    public int[] PayoutPerGrade => payoutPerGrade;
+
+    public int[] WinCountsPerGrade => winThisRunPerGrade;          // 今回
+
+    public int[] TotalWinCountsPerGrade => totalWinTicketsPerGrade; // 累計
+
+    public int LoseThisRun => loseThisRun;
+
+    public int TotalLose => totalLoseTickets;
+
+    public int TotalTicketsBought => totalTicketsBought;
+
+    public int PayoutThisRun => payoutThisRun;
+
+    public int TotalPayout => totalPayout;
+
+    public int WinThisRun
 
     {
 
-        var s = new LotterySummary(ticketCount);
-
-        for (int i = 0; i < ticketCount; i++)
+        get
 
         {
 
-            float r = Random.value;
+            int sum = 0;
 
-            if (r < prob1)
+            for (int i = 0; i < winThisRunPerGrade.Length; i++) sum += winThisRunPerGrade[i];
 
-            {
-
-                s.c1++; s.p1 += prize1; s.totalPrize += prize1;
-
-            }
-
-            else if (r < prob1 + prob2)
-
-            {
-
-                s.c2++; s.p2 += prize2; s.totalPrize += prize2;
-
-            }
-
-            else if (r < prob1 + prob2 + prob3)
-
-            {
-
-                s.c3++; s.p3 += prize3; s.totalPrize += prize3;
-
-            }
-
-            else if (r < prob1 + prob2 + prob3 + prob4)
-
-            {
-
-                s.c4++; s.p4 += prize4; s.totalPrize += prize4;
-
-            }
+            return sum;
 
         }
 
-        return s;
+    }
+
+    public int TotalWins
+
+    {
+
+        get
+
+        {
+
+            int sum = 0;
+
+            for (int i = 0; i < totalWinTicketsPerGrade.Length; i++) sum += totalWinTicketsPerGrade[i];
+
+            return sum;
+
+        }
+
+    }
+
+    private void Awake()
+
+    {
+
+        EnsureArrays();
+
+        ClearThisRun();
+
+    }
+
+#if UNITY_EDITOR
+
+    private void OnValidate()
+
+    {
+
+        if (gradeCount < 1) gradeCount = 1;
+
+        EnsureArrays();
+
+    }
+
+#endif
+
+    private void EnsureArrays()
+
+    {
+
+        if (payoutPerGrade == null || payoutPerGrade.Length != gradeCount)
+
+            payoutPerGrade = new int[gradeCount];
+
+        if (weightPerGrade == null || weightPerGrade.Length != gradeCount)
+
+            weightPerGrade = new int[gradeCount];
+
+        if (totalWinTicketsPerGrade == null || totalWinTicketsPerGrade.Length != gradeCount)
+
+            totalWinTicketsPerGrade = new int[gradeCount];
+
+        if (winThisRunPerGrade == null || winThisRunPerGrade.Length != gradeCount)
+
+            winThisRunPerGrade = new int[gradeCount];
+
+    }
+
+    // =========================
+
+    // ここが「抽選の本体」
+
+    // =========================
+
+    public LotteryResult RunLottery(int tickets)
+
+    {
+
+        EnsureArrays();
+
+        ClearThisRun();
+
+        // 0以下が来たら安全に無視
+
+        if (tickets <= 0)
+
+        {
+
+            LastResult = new LotteryResult(gradeCount, 0);
+
+            return LastResult;
+
+        }
+
+        totalTicketsBought += tickets;
+
+        // 抽選
+
+        int sumWinWeights = 0;
+
+        for (int i = 0; i < gradeCount; i++)
+
+            sumWinWeights += Mathf.Max(0, weightPerGrade[i]);
+
+        int totalWeight = sumWinWeights + Mathf.Max(0, loseWeight);
+
+        if (totalWeight <= 0)
+
+        {
+
+            // 全部0なら全部ハズレ扱い
+
+            loseThisRun = tickets;
+
+            totalLoseTickets += tickets;
+
+            LastResult = new LotteryResult(gradeCount, tickets);
+
+            LastResult.loseTickets = tickets;
+
+            LastResult.payoutThisRun = 0;
+
+            return LastResult;
+
+        }
+
+        for (int t = 0; t < tickets; t++)
+
+        {
+
+            int r = Random.Range(0, totalWeight); // 0..totalWeight-1
+
+            // まずハズレ判定（loseWeight分）
+
+            if (r < loseWeight)
+
+            {
+
+                loseThisRun++;
+
+                totalLoseTickets++;
+
+                continue;
+
+            }
+
+            // 当たり判定（1等〜n等）
+
+            r -= loseWeight;
+
+            int pickedGrade = PickByWeight(r, weightPerGrade);
+
+            if (pickedGrade < 0)
+
+            {
+
+                // 念のため安全策：当たり側が全部0ならハズレ
+
+                loseThisRun++;
+
+                totalLoseTickets++;
+
+                continue;
+
+            }
+
+            winThisRunPerGrade[pickedGrade]++;
+
+            totalWinTicketsPerGrade[pickedGrade]++;
+
+            int payout = (payoutPerGrade != null && pickedGrade < payoutPerGrade.Length)
+
+                ? payoutPerGrade[pickedGrade]
+
+                : 0;
+
+            payoutThisRun += payout;
+
+            totalPayout += payout;
+
+        }
+
+        // 結果をまとめて返す（UIが参照できる）
+
+        LastResult = new LotteryResult(gradeCount, tickets);
+
+        for (int i = 0; i < gradeCount; i++)
+
+            LastResult.winCountsPerGrade[i] = winThisRunPerGrade[i];
+
+        LastResult.loseTickets = loseThisRun;
+
+        LastResult.payoutThisRun = payoutThisRun;
+
+        return LastResult;
+
+    }
+
+    // r は「当たり側の重み合計」の範囲で来る想定
+
+    private int PickByWeight(int r, int[] weights)
+
+    {
+
+        int acc = 0;
+
+        for (int i = 0; i < weights.Length; i++)
+
+        {
+
+            int w = Mathf.Max(0, weights[i]);
+
+            acc += w;
+
+            if (r < acc) return i;
+
+        }
+
+        return -1;
+
+    }
+
+    // 今回分だけクリア（累計は残る）
+
+    public void ClearThisRun()
+
+    {
+
+        EnsureArrays();
+
+        payoutThisRun = 0;
+
+        loseThisRun = 0;
+
+        for (int i = 0; i < winThisRunPerGrade.Length; i++)
+
+            winThisRunPerGrade[i] = 0;
+
+    }
+
+    // 全部リセット（累計も消す）
+
+    public void ClearAll()
+
+    {
+
+        EnsureArrays();
+
+        totalTicketsBought = 0;
+
+        totalPayout = 0;
+
+        totalLoseTickets = 0;
+
+        for (int i = 0; i < totalWinTicketsPerGrade.Length; i++)
+
+            totalWinTicketsPerGrade[i] = 0;
+
+        ClearThisRun();
+
+        LastResult = null;
+
+    }
+
+    // 確率チェック用（デバッグ）
+
+    public float GetProbabilityOfGrade(int gradeIndex)
+
+    {
+
+        int sumWinWeights = 0;
+
+        for (int i = 0; i < gradeCount; i++)
+
+            sumWinWeights += Mathf.Max(0, weightPerGrade[i]);
+
+        int totalWeight = sumWinWeights + Mathf.Max(0, loseWeight);
+
+        if (totalWeight <= 0) return 0f;
+
+        if (gradeIndex < 0 || gradeIndex >= gradeCount) return 0f;
+
+        return (float)Mathf.Max(0, weightPerGrade[gradeIndex]) / totalWeight;
 
     }
 
 }
-

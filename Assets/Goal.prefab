@@ -128,6 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da82618b36a7f804097d1461d0cc3f30, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalSpawner
+  goal: {fileID: 8821391277366134154}
   range: 40
 --- !u!114 &518674048231967646
 MonoBehaviour:
@@ -141,3 +142,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f37a2c8cfd2608140b8251d3677aca05, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GoalTrigger
+  lotteryManager: {fileID: 0}
+  lotteryUI: {fileID: 0}
+  goalSpawner: {fileID: 0}
+  ticketsPerGoal: 100

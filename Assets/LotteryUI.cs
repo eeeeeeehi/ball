@@ -1,17 +1,34 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
+using System.Text;
 public class LotteryUI : MonoBehaviour
 {
-    public TextMeshProUGUI text;
-    public void SetResult(LotterySummary s)
+    [SerializeField] private LotteryManager manager;
+    [SerializeField] private TextMeshProUGUI lotteryText;
+    [SerializeField] private TextMeshProUGUI summaryText;
+    public void Refresh()
     {
-        if (text == null) return;
-        text.text =
-            $"w“ü–‡”: {s.tickets:N0}–‡\n" +
-            $"‡Œv“–‘I‹àŠz: {s.totalPrize:N0}‰~\n\n" +
-            $"1“™: {s.c1:N0}–‡ / {s.p1:N0}‰~\n" +
-            $"2“™: {s.c2:N0}–‡ / {s.p2:N0}‰~\n" +
-            $"3“™: {s.c3:N0}–‡ / {s.p3:N0}‰~\n" +
-            $"4“™: {s.c4:N0}–‡ / {s.p4:N0}‰~";
+        if (manager == null) return;
+        StringBuilder sb = new StringBuilder();
+        sb.AppendLine("ã€å½“é¸å†…è¨³ã€‘");
+        for (int i = 0; i < manager.GradeCount; i++)
+        {
+            sb.AppendLine(
+                $"{i + 1}ç­‰ : {manager.WinCountsPerGrade[i]}æšï¼ˆç´¯è¨ˆ{manager.TotalWinCountsPerGrade[i]}æšï¼‰"
+            );
+        }
+        sb.AppendLine(
+            $"ãƒã‚ºãƒ¬ : {manager.LoseThisRun}æšï¼ˆç´¯è¨ˆ{manager.TotalLose}æšï¼‰"
+        );
+        if (lotteryText != null)
+            lotteryText.text = sb.ToString();
+        StringBuilder s = new StringBuilder();
+        s.AppendLine($"è³¼å…¥æšæ•° : {manager.TotalTicketsBought}æš");
+        s.AppendLine($"ä»Šå›ã®å½“ãŸã‚Šæšæ•° : {manager.WinThisRun}æš");
+        s.AppendLine($"ç´¯è¨ˆã®å½“ãŸã‚Šæšæ•° : {manager.TotalWins}æš");
+        s.AppendLine($"ä»Šå›å½“é¸é‡‘é¡ : {manager.PayoutThisRun}å††");
+        s.AppendLine($"åˆè¨ˆå½“é¸é‡‘é¡ : {manager.TotalPayout}å††");
+        if (summaryText != null)
+            summaryText.text = s.ToString();
     }
 }
