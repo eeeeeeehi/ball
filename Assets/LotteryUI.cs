@@ -66,13 +66,11 @@ public class LotteryUI : MonoBehaviour
 
         s.AppendLine($"購入枚数：{ticketsThisRun}枚（{manager.TotalTicketsBought}枚）");
 
-        s.AppendLine($"今回の当たり枚数：{manager.WinThisRun}枚 ({manager.TotalWins}枚)");
+        s.AppendLine($"購入金額：{purchaseCostThisRun:N0}円 ({totalPurchaseCost:N0}円)");
 
-        s.AppendLine($"今回購入金額：{purchaseCostThisRun:N0}円 ({totalPurchaseCost:N0}円)");
+        s.AppendLine($"当選金額：{manager.PayoutThisRun:N0}円 ({manager.TotalPayout:N0}円)");
 
-        s.AppendLine($"今回当選金額：{manager.PayoutThisRun:N0}円 ({manager.TotalPayout:N0}円)");
-
-        s.AppendLine($"今回収支：{profitThisRun:N0}円 ({totalProfit:N0}円)");
+        s.AppendLine($"収支：{profitThisRun:N0}円 ({totalProfit:N0}円)");
 
 
         if (summaryText != null)
