@@ -4,9 +4,7 @@ public class GoalSpawner : MonoBehaviour
 
 {
 
-    [SerializeField] private Transform goal;
-
-    [SerializeField] private GoalTrigger goalTrigger;
+    [SerializeField] private GameObject goalPrefab;
 
     [Header("Spawn Area")]
 
@@ -20,31 +18,71 @@ public class GoalSpawner : MonoBehaviour
 
     [SerializeField] private float y = 0.5f;
 
-    [Header("Goal Size")]
+    [Header("Spawn Settings")]
 
-    [SerializeField] private Vector3 smallGoalScale = new Vector3(1f, 1f, 1f);
+    [SerializeField] private int initialSpawnCount = 5;
 
-    [SerializeField] private Vector3 mediumGoalScale = new Vector3(1.5f, 1.5f, 1.5f);
+    [SerializeField] private int spawnPerWave = 2;
 
-    [SerializeField] private Vector3 largeGoalScale = new Vector3(2.2f, 2.2f, 2.2f);
+    [SerializeField] private float spawnInterval = 3f;
 
-    private void Awake()
+    [SerializeField] private int maxGoals = 20;
+
+    private void Start()
 
     {
 
-        if (goalTrigger == null && goal != null)
+        // 最初に配置
 
-            goalTrigger = goal.GetComponent<GoalTrigger>();
+        for (int i = 0; i < initialSpawnCount; i++)
+
+        {
+
+            SpawnOneGoal();
+
+        }
+
+        // 一定時間ごとに追加
+
+        InvokeRepeating(nameof(SpawnWave), spawnInterval, spawnInterval);
 
     }
 
-    public void MoveGoalToNewPosition()
+    private void SpawnWave()
 
     {
 
-        if (goal == null) return;
+        int currentGoals = GameObject.FindGameObjectsWithTag("Goal").Length;
 
-        Vector3 newPos = new Vector3(
+        if (currentGoals >= maxGoals) return;
+
+        int canSpawn = Mathf.Min(spawnPerWave, maxGoals - currentGoals);
+
+        for (int i = 0; i < canSpawn; i++)
+
+        {
+
+            SpawnOneGoal();
+
+        }
+
+    }
+
+    public void SpawnOneGoal()
+
+    {
+
+        if (goalPrefab == null)
+
+        {
+
+            Debug.LogError("[GoalSpawner] goalPrefab が未設定");
+
+            return;
+
+        }
+
+        Vector3 pos = new Vector3(
 
             Random.Range(minX, maxX),
 
@@ -54,17 +92,21 @@ public class GoalSpawner : MonoBehaviour
 
         );
 
-        goal.position = newPos;
+        GameObject obj = Instantiate(goalPrefab, pos, Quaternion.identity);
 
-        ApplyRandomGoalType();
+        ApplyRandomGoalType(obj);
 
     }
 
-    private void ApplyRandomGoalType()
+    private void ApplyRandomGoalType(GameObject obj)
 
     {
 
-        if (goal == null || goalTrigger == null) return;
+        GoalTrigger trigger = obj.GetComponent<GoalTrigger>();
+
+        if (trigger == null) return;
+
+        // 100 / 1000 / 10000 を同確率
 
         int rand = Random.Range(0, 3);
 
@@ -74,31 +116,25 @@ public class GoalSpawner : MonoBehaviour
 
             case 0:
 
-                // 小ゴール：100枚
+                obj.transform.localScale = new Vector3(1f, 1f, 1f);
 
-                goal.localScale = smallGoalScale;
-
-                goalTrigger.SetTicketsPerGoal(100);
+                trigger.SetTicketsPerGoal(100);
 
                 break;
 
             case 1:
 
-                // 中ゴール：1000枚
+                obj.transform.localScale = new Vector3(1.5f, 1.5f, 1.5f);
 
-                goal.localScale = mediumGoalScale;
-
-                goalTrigger.SetTicketsPerGoal(1000);
+                trigger.SetTicketsPerGoal(1000);
 
                 break;
 
             case 2:
 
-                // 大ゴール：10000枚
+                obj.transform.localScale = new Vector3(2.2f, 2.2f, 2.2f);
 
-                goal.localScale = largeGoalScale;
-
-                goalTrigger.SetTicketsPerGoal(10000);
+                trigger.SetTicketsPerGoal(10000);
 
                 break;
 

@@ -12,7 +12,6 @@ GameObject:
   - component: {fileID: 7581036521437622096}
   - component: {fileID: 8955111164536940351}
   - component: {fileID: 3290437358682175058}
-  - component: {fileID: 6084521657737930651}
   - component: {fileID: 518674048231967646}
   m_Layer: 0
   m_Name: Goal
@@ -116,20 +115,6 @@ CapsuleCollider:
   m_Height: 2
   m_Direction: 1
   m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
---- !u!114 &6084521657737930651
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 481035724135508688}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: da82618b36a7f804097d1461d0cc3f30, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GoalSpawner
-  goal: {fileID: 8821391277366134154}
-  range: 40
 --- !u!114 &518674048231967646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -144,5 +129,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GoalTrigger
   lotteryManager: {fileID: 0}
   lotteryUI: {fileID: 0}
-  goalSpawner: {fileID: 0}
   ticketsPerGoal: 100
