@@ -3,6 +3,7 @@ using UnityEngine;
 [Serializable]
 public class LotteryResult
 {
+    public int tickets;
     // 0..gradesCount-1 が 1等..n等
     public int[] winCountsPerGrade;
     // この回のハズレ枚数

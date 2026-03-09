@@ -38,6 +38,14 @@ public class LotteryManager : MonoBehaviour
 
     [SerializeField] private int[] totalWinTicketsPerGrade;
 
+
+    [SerializeField] private int ticketPrice = 300;
+    public int TicketPrice => ticketPrice;
+    public int PurchaseCostThisRun => LastResult != null ? LastResult.tickets * ticketPrice : 0;
+    public int TotalPurchaseCost => totalTicketsBought * ticketPrice;
+    public int ProfitThisRun => PayoutThisRun - PurchaseCostThisRun;
+    public int TotalProfit => TotalPayout - TotalPurchaseCost;
+
     // ===== Last Run (今回) =====
 
     [Header("Last Result (ReadOnly)")]
